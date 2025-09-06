@@ -310,7 +310,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 👨‍💻 Author
 
-**Jatin Srivastava** - *Initial work* - [YourGitHub](https://github.com/JxTIN21)
+**Jatin Srivastava** - *Initial work* - [GitHub](https://github.com/JxTIN21)
 
 ## 🙏 Acknowledgments
 
