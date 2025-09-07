@@ -1,29 +1,40 @@
 package main.java.com.moneymind.ui;
 
 import main.java.com.moneymind.service.*;
+import main.java.com.moneymind.ui.components.*;
+import main.java.com.moneymind.ui.theme.*;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
 /**
- * Main application window with tabbed interface
+ * Modern main application window with enhanced UI and modular design
  */
 public class MainFrame extends JFrame {
+    // Services (unchanged)
     private TransactionService transactionService;
     private CategoryService categoryService;
     private BudgetService budgetService;
     private ReportService reportService;
 
-    private JTabbedPane tabbedPane;
+    // UI Components - now modularized
+    private ModernTabbedPane tabbedPane;
+    private ModernMenuBar menuBar;
+    private ModernStatusBar statusBar;
+    private ModernToolBar toolBar;
+
+    // Panels (unchanged functionality)
     private TransactionPanel transactionPanel;
     private BudgetPanel budgetPanel;
     private CategoryPanel categoryPanel;
     private ReportsPanel reportsPanel;
 
     public MainFrame() {
+        // Apply modern look and feel
+        ThemeManager.applyModernTheme();
         initializeServices();
-        setupUI();
+        setupModernUI();
         setupEventHandlers();
     }
 
@@ -34,135 +45,87 @@ public class MainFrame extends JFrame {
         reportService = new ReportService();
     }
 
-    private void setupUI() {
+    private void setupModernUI() {
+        configureMainWindow();
+        createModernComponents();
+        layoutComponents();
+    }
+
+    private void configureMainWindow() {
         setTitle("MoneyMind - Personal Finance Tracker");
         setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-        setSize(1200, 800);
+        setSize(1400, 900); // Slightly larger for modern look
         setLocationRelativeTo(null);
+        setMinimumSize(new Dimension(1000, 600));
+
+        // Modern window properties
+        setExtendedState(JFrame.MAXIMIZED_BOTH);
 
         // Set application icon
         try {
-            setIconImage(createAppIcon());
+            setIconImage(IconManager.createModernAppIcon());
         } catch (Exception e) {
             // Icon creation failed, continue without icon
         }
-
-        // Create menu bar
-        setJMenuBar(createMenuBar());
-
-        // Create main content
-        createMainContent();
-
-        // Create status bar
-        add(createStatusBar(), BorderLayout.SOUTH);
     }
 
-    private void createMainContent() {
-        tabbedPane = new JTabbedPane(JTabbedPane.TOP);
-        tabbedPane.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 12));
+    private void createModernComponents() {
+        // Create modern menu bar
+        menuBar = new ModernMenuBar(this);
+        setJMenuBar(menuBar);
 
-        // Create panels
+        // Create modern toolbar
+        toolBar = new ModernToolBar(this);
+
+        // Create modern tabbed pane
+        tabbedPane = new ModernTabbedPane();
+
+        // Create panels with modern styling
         transactionPanel = new TransactionPanel(transactionService, categoryService);
         budgetPanel = new BudgetPanel(budgetService, categoryService);
         categoryPanel = new CategoryPanel(categoryService);
         reportsPanel = new ReportsPanel(reportService, categoryService);
 
-        // Add tabs
-        tabbedPane.addTab("Transactions", createIcon("💳"), transactionPanel, "Manage your transactions");
-        tabbedPane.addTab("Budgets", createIcon("💰"), budgetPanel, "Plan and track your budgets");
-        tabbedPane.addTab("Categories", createIcon("📁"), categoryPanel, "Organize your categories");
-        tabbedPane.addTab("Reports", createIcon("📊"), reportsPanel, "View financial reports and analysis");
+        // Apply modern styling to panels
+        ThemeManager.applyPanelStyling(transactionPanel);
+        ThemeManager.applyPanelStyling(budgetPanel);
+        ThemeManager.applyPanelStyling(categoryPanel);
+        ThemeManager.applyPanelStyling(reportsPanel);
 
-        add(tabbedPane, BorderLayout.CENTER);
+        // Add tabs with modern icons and styling
+        tabbedPane.addModernTab("Transactions", IconManager.getTransactionIcon(),
+                transactionPanel, "Manage your transactions");
+        tabbedPane.addModernTab("Budgets", IconManager.getBudgetIcon(),
+                budgetPanel, "Plan and track your budgets");
+        tabbedPane.addModernTab("Categories", IconManager.getCategoryIcon(),
+                categoryPanel, "Organize your categories");
+        tabbedPane.addModernTab("Reports", IconManager.getReportIcon(),
+                reportsPanel, "View financial reports and analysis");
+
+        // Create modern status bar
+        statusBar = new ModernStatusBar();
     }
 
-    private JMenuBar createMenuBar() {
-        JMenuBar menuBar = new JMenuBar();
+    private void layoutComponents() {
+        setLayout(new BorderLayout(0, 0));
 
-        // File menu
-        JMenu fileMenu = new JMenu("File");
-        fileMenu.setMnemonic('F');
+        // Create main panel with modern styling
+        JPanel mainPanel = new JPanel(new BorderLayout());
+        mainPanel.setBackground(ThemeManager.getBackgroundColor());
 
-        JMenuItem importItem = new JMenuItem("Import Transactions...");
-        importItem.setMnemonic('I');
-        importItem.setAccelerator(KeyStroke.getKeyStroke("ctrl I"));
-        importItem.addActionListener(e -> importTransactions());
+        // Add toolbar
+        mainPanel.add(toolBar, BorderLayout.NORTH);
 
-        JMenuItem exportItem = new JMenuItem("Export Transactions...");
-        exportItem.setMnemonic('E');
-        exportItem.setAccelerator(KeyStroke.getKeyStroke("ctrl E"));
-        exportItem.addActionListener(e -> exportTransactions());
+        // Add tabbed pane with padding
+        JPanel contentPanel = new JPanel(new BorderLayout());
+        contentPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        contentPanel.setBackground(ThemeManager.getBackgroundColor());
+        contentPanel.add(tabbedPane, BorderLayout.CENTER);
 
-        fileMenu.add(importItem);
-        fileMenu.add(exportItem);
-        fileMenu.addSeparator();
+        mainPanel.add(contentPanel, BorderLayout.CENTER);
+        mainPanel.add(statusBar, BorderLayout.SOUTH);
 
-        JMenuItem exitItem = new JMenuItem("Exit");
-        exitItem.setMnemonic('X');
-        exitItem.setAccelerator(KeyStroke.getKeyStroke("ctrl Q"));
-        exitItem.addActionListener(e -> exitApplication());
-
-        fileMenu.add(exitItem);
-
-        // Tools menu
-        JMenu toolsMenu = new JMenu("Tools");
-        toolsMenu.setMnemonic('T');
-
-        JMenuItem backupItem = new JMenuItem("Backup Database");
-        backupItem.addActionListener(e -> backupDatabase());
-
-        JMenuItem restoreItem = new JMenuItem("Restore Database");
-        restoreItem.addActionListener(e -> restoreDatabase());
-
-        JMenuItem settingsItem = new JMenuItem("Settings");
-        settingsItem.setMnemonic('S');
-        settingsItem.addActionListener(e -> showSettings());
-
-        toolsMenu.add(backupItem);
-        toolsMenu.add(restoreItem);
-        toolsMenu.addSeparator();
-        toolsMenu.add(settingsItem);
-
-        // Help menu
-        JMenu helpMenu = new JMenu("Help");
-        helpMenu.setMnemonic('H');
-
-        JMenuItem aboutItem = new JMenuItem("About MoneyMind");
-        aboutItem.setMnemonic('A');
-        aboutItem.addActionListener(e -> showAbout());
-
-        JMenuItem helpItem = new JMenuItem("User Guide");
-        helpItem.setMnemonic('U');
-        helpItem.setAccelerator(KeyStroke.getKeyStroke("F1"));
-        helpItem.addActionListener(e -> showHelp());
-
-        helpMenu.add(helpItem);
-        helpMenu.addSeparator();
-        helpMenu.add(aboutItem);
-
-        menuBar.add(fileMenu);
-        menuBar.add(toolsMenu);
-        menuBar.add(helpMenu);
-
-        return menuBar;
-    }
-
-    private JPanel createStatusBar() {
-        JPanel statusBar = new JPanel(new BorderLayout());
-        statusBar.setBorder(BorderFactory.createEtchedBorder());
-        statusBar.setPreferredSize(new Dimension(0, 25));
-
-        JLabel statusLabel = new JLabel("Ready");
-        statusLabel.setBorder(BorderFactory.createEmptyBorder(2, 5, 2, 5));
-
-        JLabel connectionLabel = new JLabel("Database Connected");
-        connectionLabel.setBorder(BorderFactory.createEmptyBorder(2, 5, 2, 5));
-        connectionLabel.setHorizontalAlignment(SwingConstants.RIGHT);
-
-        statusBar.add(statusLabel, BorderLayout.WEST);
-        statusBar.add(connectionLabel, BorderLayout.EAST);
-
-        return statusBar;
+        add(mainPanel, BorderLayout.CENTER);
     }
 
     private void setupEventHandlers() {
@@ -173,208 +136,155 @@ public class MainFrame extends JFrame {
             }
         });
 
-        // Add tab change listener to refresh data
+        // Add tab change listener with animation
         tabbedPane.addChangeListener(e -> {
             int selectedIndex = tabbedPane.getSelectedIndex();
-            refreshCurrentPanel(selectedIndex);
+            AnimationManager.fadeInPanel(() -> refreshCurrentPanel(selectedIndex));
+            statusBar.updateActiveTab(tabbedPane.getTitleAt(selectedIndex));
         });
+
+        // Add modern window state listeners
+        addComponentListener(new java.awt.event.ComponentAdapter() {
+            @Override
+            public void componentResized(java.awt.event.ComponentEvent e) {
+                // Update responsive layout
+                updateResponsiveLayout();
+            }
+        });
+    }
+
+    private void updateResponsiveLayout() {
+        // Adjust UI based on window size
+        Dimension size = getSize();
+        if (size.width < 1200) {
+            tabbedPane.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
+        } else {
+            tabbedPane.setTabLayoutPolicy(JTabbedPane.WRAP_TAB_LAYOUT);
+        }
     }
 
     private void refreshCurrentPanel(int tabIndex) {
         SwingUtilities.invokeLater(() -> {
+            statusBar.setStatus("Refreshing data...");
+
             switch (tabIndex) {
                 case 0: // Transactions
                     transactionPanel.refreshData();
+                    statusBar.setStatus("Transactions updated");
                     break;
                 case 1: // Budgets
                     budgetPanel.refreshData();
+                    statusBar.setStatus("Budgets updated");
                     break;
                 case 2: // Categories
                     categoryPanel.refreshData();
+                    statusBar.setStatus("Categories updated");
                     break;
                 case 3: // Reports
                     reportsPanel.refreshData();
+                    statusBar.setStatus("Reports updated");
                     break;
             }
+
+            // Clear status after delay
+            Timer timer = new Timer(2000, e -> statusBar.setStatus("Ready"));
+            timer.setRepeats(false);
+            timer.start();
         });
     }
 
-    // Menu action methods
-    private void importTransactions() {
-        JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter(
-                "CSV files", "csv"));
+    // Menu action methods (unchanged functionality, enhanced UI)
+    public void importTransactions() {
+        ModernFileChooser fileChooser = new ModernFileChooser();
+        fileChooser.setFileFilter("CSV files", "csv");
 
-        if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+        if (fileChooser.showOpenDialog(this) == ModernFileChooser.APPROVE_OPTION) {
+            statusBar.setStatus("Importing transactions...");
             // Implementation for CSV import
-            JOptionPane.showMessageDialog(this,
+            ModernDialogs.showInfoDialog(this,
                     "Import functionality will be implemented in next version",
-                    "Feature Coming Soon",
-                    JOptionPane.INFORMATION_MESSAGE);
+                    "Feature Coming Soon");
+            statusBar.setStatus("Ready");
         }
     }
 
-    private void exportTransactions() {
-        JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter(
-                "CSV files", "csv"));
+    public void exportTransactions() {
+        ModernFileChooser fileChooser = new ModernFileChooser();
+        fileChooser.setFileFilter("CSV files", "csv");
 
-        if (fileChooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
+        if (fileChooser.showSaveDialog(this) == ModernFileChooser.APPROVE_OPTION) {
+            statusBar.setStatus("Exporting transactions...");
             // Implementation for CSV export
-            JOptionPane.showMessageDialog(this,
+            ModernDialogs.showInfoDialog(this,
                     "Export functionality will be implemented in next version",
-                    "Feature Coming Soon",
-                    JOptionPane.INFORMATION_MESSAGE);
+                    "Feature Coming Soon");
+            statusBar.setStatus("Ready");
         }
     }
 
-    private void backupDatabase() {
-        JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter(
-                "Database files", "db"));
+    public void backupDatabase() {
+        ModernFileChooser fileChooser = new ModernFileChooser();
+        fileChooser.setFileFilter("Database files", "db");
 
-        if (fileChooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
-            JOptionPane.showMessageDialog(this,
+        if (fileChooser.showSaveDialog(this) == ModernFileChooser.APPROVE_OPTION) {
+            statusBar.setStatus("Creating backup...");
+            ModernDialogs.showInfoDialog(this,
                     "Backup functionality will be implemented in next version",
-                    "Feature Coming Soon",
-                    JOptionPane.INFORMATION_MESSAGE);
+                    "Feature Coming Soon");
+            statusBar.setStatus("Ready");
         }
     }
 
-    private void restoreDatabase() {
-        JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter(
-                "Database files", "db"));
+    public void restoreDatabase() {
+        ModernFileChooser fileChooser = new ModernFileChooser();
+        fileChooser.setFileFilter("Database files", "db");
 
-        if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
-            JOptionPane.showMessageDialog(this,
+        if (fileChooser.showOpenDialog(this) == ModernFileChooser.APPROVE_OPTION) {
+            statusBar.setStatus("Restoring database...");
+            ModernDialogs.showInfoDialog(this,
                     "Restore functionality will be implemented in next version",
-                    "Feature Coming Soon",
-                    JOptionPane.INFORMATION_MESSAGE);
+                    "Feature Coming Soon");
+            statusBar.setStatus("Ready");
         }
     }
 
-    private void showSettings() {
-        JOptionPane.showMessageDialog(this,
-                "Settings panel will be implemented in next version",
-                "Feature Coming Soon",
-                JOptionPane.INFORMATION_MESSAGE);
+    public void showSettings() {
+        SettingsDialog settingsDialog = new SettingsDialog(this);
+        settingsDialog.setVisible(true);
     }
 
-    private void showAbout() {
-        String aboutText = """
-            MoneyMind - Personal Finance Tracker
-            Version 1.0
-            
-            A comprehensive personal finance management application
-            built with Java and SQLite.
-            
-            Features:
-            • Transaction Management
-            • Category Organization
-            • Budget Planning & Tracking
-            • Financial Reports & Analysis
-            • Data Import/Export
-            
-            © 2024 MoneyMind Project
-            """;
-
-        JOptionPane.showMessageDialog(this, aboutText, "About MoneyMind",
-                JOptionPane.INFORMATION_MESSAGE);
+    public void showAbout() {
+        AboutDialog aboutDialog = new AboutDialog(this);
+        aboutDialog.setVisible(true);
     }
 
-    private void showHelp() {
-        String helpText = """
-            MoneyMind User Guide
-            
-            Getting Started:
-            1. Add categories to organize your transactions
-            2. Record your income and expenses
-            3. Set up budgets to track spending
-            4. View reports to analyze your finances
-            
-            Tips:
-            • Use Ctrl+N to add new transactions quickly
-            • Set up monthly budgets for better tracking
-            • Check the Reports tab for insights
-            • Use categories to organize expenses
-            
-            For more help, visit the documentation.
-            """;
-
-        JTextArea textArea = new JTextArea(helpText);
-        textArea.setEditable(false);
-        textArea.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
-
-        JScrollPane scrollPane = new JScrollPane(textArea);
-        scrollPane.setPreferredSize(new Dimension(400, 300));
-
-        JOptionPane.showMessageDialog(this, scrollPane, "User Guide",
-                JOptionPane.INFORMATION_MESSAGE);
+    public void showHelp() {
+        HelpDialog helpDialog = new HelpDialog(this);
+        helpDialog.setVisible(true);
     }
 
     private void exitApplication() {
-        int result = JOptionPane.showConfirmDialog(
+        int result = ModernDialogs.showConfirmDialog(
                 this,
                 "Are you sure you want to exit MoneyMind?",
-                "Exit Application",
-                JOptionPane.YES_NO_OPTION,
-                JOptionPane.QUESTION_MESSAGE
+                "Exit Application"
         );
 
         if (result == JOptionPane.YES_OPTION) {
-            try {
-                // Close database connection
-                main.java.com.moneymind.database.DatabaseManager.getInstance().disconnect();
-            } catch (Exception e) {
-                System.err.println("Error closing database: " + e.getMessage());
-            }
-
-            System.exit(0);
+            statusBar.setStatus("Closing application...");
+            AnimationManager.fadeOutWindow(this, () -> {
+                try {
+                    // Close database connection
+                    main.java.com.moneymind.database.DatabaseManager.getInstance().disconnect();
+                } catch (Exception e) {
+                    System.err.println("Error closing database: " + e.getMessage());
+                }
+                System.exit(0);
+            });
         }
     }
 
-    // Utility methods
-    private Icon createIcon(String emoji) {
-        return new Icon() {
-            @Override
-            public void paintIcon(Component c, Graphics g, int x, int y) {
-                Graphics2D g2d = (Graphics2D) g;
-                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2d.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 16));
-                g2d.drawString(emoji, x, y + 12);
-            }
-
-            @Override
-            public int getIconWidth() { return 20; }
-
-            @Override
-            public int getIconHeight() { return 16; }
-        };
-    }
-
-    private Image createAppIcon() {
-        // Create a simple icon programmatically
-        int size = 32;
-        java.awt.image.BufferedImage image = new java.awt.image.BufferedImage(
-                size, size, java.awt.image.BufferedImage.TYPE_INT_ARGB);
-
-        Graphics2D g2d = image.createGraphics();
-        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-        // Draw a simple money symbol
-        g2d.setColor(new Color(34, 139, 34)); // Forest green
-        g2d.fillOval(4, 4, size - 8, size - 8);
-
-        g2d.setColor(Color.WHITE);
-        g2d.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 18));
-        g2d.drawString("$", size/2 - 5, size/2 + 6);
-
-        g2d.dispose();
-        return image;
-    }
-
-    // Public methods for panel interaction
+    // Public methods for panel interaction (unchanged functionality)
     public void switchToTransactionsTab() {
         tabbedPane.setSelectedIndex(0);
     }
@@ -392,9 +302,34 @@ public class MainFrame extends JFrame {
     }
 
     public void refreshAllPanels() {
+        statusBar.setStatus("Refreshing all data...");
         transactionPanel.refreshData();
         budgetPanel.refreshData();
         categoryPanel.refreshData();
         reportsPanel.refreshData();
+        statusBar.setStatus("All data refreshed");
+    }
+
+    // Additional modern features
+    public void toggleFullScreen() {
+        if (getExtendedState() == JFrame.MAXIMIZED_BOTH) {
+            setExtendedState(JFrame.NORMAL);
+        } else {
+            setExtendedState(JFrame.MAXIMIZED_BOTH);
+        }
+    }
+
+    public void toggleDarkMode() {
+        ThemeManager.toggleDarkMode();
+        SwingUtilities.updateComponentTreeUI(this);
+        repaint();
+    }
+
+    public ModernStatusBar getStatusBar() {
+        return statusBar;
+    }
+
+    public ModernTabbedPane getTabbedPane() {
+        return tabbedPane;
     }
 }
